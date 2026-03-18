@@ -310,12 +310,12 @@ function procesarCSV(text){
 // ── FIREBASE OPS ──────────────────────────────────────────────
 function marcarRetiro(id){
   var hora = new Date().toLocaleTimeString("es-CR",{hour:"2-digit",minute:"2-digit"});
-  db.ref("pedidos_compra/"+id).set({hora:hora, retirado:true});
+  db.ref("pedidos_compra/pedido_"+id).set({hora:hora, retirado:true});
   mostrarAlerta("✅ Entregado — "+hora);
 }
 
 function deshacerRetiro(id){
-  db.ref("pedidos_compra/"+id).remove();
+  db.ref("pedidos_compra/pedido_"+id).remove();
   mostrarAlerta("↩ Retiro deshecho");
 }
 
@@ -323,7 +323,7 @@ function deshacerRetiro(id){
 function actualizarStats(){
   var total  = pedidos.length;
   var platos = pedidos.reduce(function(s,p){return s+p.cant;},0);
-  var ret    = pedidos.filter(function(p){return retirados[p.id];}).length;
+  var ret    = pedidos.filter(function(p){return retirados["pedido_"+p.id]||retirados[p.id];}).length;
   document.getElementById("s-total").textContent  = total;
   document.getElementById("s-platos").textContent = platos;
   document.getElementById("s-ret").textContent    = ret;
@@ -388,8 +388,9 @@ function renderTabla(){
       '<td><span class="badge" style="background:rgba(232,168,56,.1);color:var(--gold)">'+(DIA_LABEL[p.dia]||p.dia)+'</span></td>'+
       '<td><span class="badge '+(COMIDA_CLASS[p.com]||"")+'">'+(COMIDA_LABEL[p.com]||p.com)+'</span></td>'+
       '<td style="font-weight:700;color:var(--teal);font-size:1rem">'+p.cant+'</td>'+
-      '<td>'+(ret
-        ? '<span class="badge b-ret">✅ '+ret.hora+'</span>'
+      var retKey = retirados["pedido_"+p.id] || retirados[p.id];
+      '<td>'+(retKey
+        ? '<span class="badge b-ret">✅ '+retKey.hora+'</span>'
         : '<span class="badge b-pen">Pendiente</span>'
       )+'</td>'+
       '<td style="display:flex;gap:4px;flex-wrap:wrap">'+
@@ -423,11 +424,7 @@ function verQR(id){
   img.height = 200;
   img.style.borderRadius = "8px";
   qrDiv.appendChild(img);
-  // Mostrar texto del QR
-  var qrLabel = document.createElement("div");
-  qrLabel.style.cssText = "font-size:10px;color:var(--muted);margin-top:8px;word-break:break-all;font-family:monospace;background:#1f2333;padding:6px 8px;border-radius:6px;text-align:left";
-  qrLabel.textContent = qrText;
-  qrDiv.appendChild(qrLabel);
+
   document.getElementById("modal-overlay").classList.add("show");
 }
 
