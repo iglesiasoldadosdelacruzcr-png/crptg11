@@ -1,459 +1,108 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRPTG 11 — Pedidos QR</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-  const tieneAcceso = localStorage.getItem("crptg11-pedidos-ok")==="ok"||localStorage.getItem("crptg11-auth")==="ok";
-  if(!tieneAcceso){ document.documentElement.style.visibility="hidden"; }
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0f1117;--surface:#181b24;--border:#2a2d40;--gold:#e8a838;--teal:#3ecfb8;--rose:#e86b8b;--lav:#8b7fe8;--text:#e8e8f0;--muted:#7a7d95}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.header-left{display:flex;align-items:center;gap:14px}
-.back{color:var(--muted);font-size:13px;text-decoration:none}.back:hover{color:var(--gold)}
-.header-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gold)}
-.header-sub{font-size:11px;color:var(--muted);margin-top:3px}
-.main{max-width:1100px;margin:0 auto;padding:28px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px}
-.section-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--gold);margin-bottom:16px}
-.stats-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
-.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;flex:1;min-width:120px;text-align:center}
-.stat-num{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;line-height:1}
-.stat-lbl{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-.fbtn{padding:5px 14px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
-.fbtn:hover{border-color:var(--gold);color:var(--gold)}
-.fbtn.on{background:rgba(232,168,56,.15);border-color:var(--gold);color:var(--gold)}
-.fbtn.c-teal.on{background:rgba(62,207,184,.15);border-color:var(--teal);color:var(--teal)}
-.fbtn.c-rose.on{background:rgba(232,107,139,.15);border-color:var(--rose);color:var(--rose)}
-.search-wrap{position:relative;margin-left:auto}
-.search-wrap input{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 12px 8px 32px;border-radius:8px;width:200px;outline:none;transition:border-color .2s}
-.search-wrap input:focus{border-color:var(--gold)}
-.search-wrap::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px;opacity:.38}
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:13px;overflow:auto}
-table{width:100%;border-collapse:collapse}
-th{background:#1f2333;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:9px 13px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:9px 13px;font-size:13px;border-bottom:1px solid rgba(42,45,64,.5);vertical-align:middle}
-tr:last-child td{border-bottom:none}tr:hover td{background:rgba(232,168,56,.03)}
-.badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600}
-.b-des{background:rgba(232,168,56,.15);color:var(--gold)}
-.b-alm{background:rgba(62,207,184,.15);color:var(--teal)}
-.b-cen{background:rgba(139,127,232,.15);color:var(--lav)}
-.b-ret{background:rgba(62,207,184,.15);color:var(--teal)}
-.b-pen{background:rgba(232,107,139,.15);color:var(--rose)}
-.btn-sm{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
-.btn-sm:hover{border-color:var(--gold);color:var(--gold)}
-.btn-sm.teal{border-color:rgba(62,207,184,.4);color:var(--teal)}
-.btn-sm.rose{border-color:rgba(232,107,139,.4);color:var(--rose)}
-.resumen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.res-card{background:#1f2333;border:1px solid var(--border);border-radius:10px;padding:14px}
-.res-dia{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--gold);margin-bottom:10px}
-.res-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(42,45,64,.4);font-size:13px}
-.res-row:last-child{border-bottom:none}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 32px;text-align:center;max-width:380px;width:90%}
-.modal-nombre{font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:4px}
-.modal-detalle{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
-#modal-qr-div{display:flex;justify-content:center;margin-bottom:16px}
-.modal-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
-.btn-gold{padding:8px 20px;border-radius:8px;border:none;background:var(--gold);color:#000;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
-.btn-outline{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
-.status-bar{font-size:12px;color:var(--muted);padding:8px 0;margin-bottom:4px}
-.alert{position:fixed;top:20px;right:20px;background:var(--gold);color:#000;padding:12px 20px;border-radius:10px;font-weight:600;font-size:13px;z-index:999;transform:translateX(200px);opacity:0;transition:all .3s}
-.alert.show{transform:translateX(0);opacity:1}.alert.error{background:var(--rose);color:#fff}
-.empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
-@media(max-width:600px){.main{padding:14px 12px}.header{padding:10px 12px}.search-wrap{margin-left:0;width:100%}.search-wrap input{width:100%}}
-</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.4">
+  <style type="text/css">
+    body {background-color: #0d0e12}
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.8px 'Helvetica Neue'; color: #e1982b; -webkit-text-stroke: #e1982b}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 11.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 19.2px 'Helvetica Neue'; color: #e1982b; -webkit-text-stroke: #e1982b}
+    p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 10.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 19.2px 'Helvetica Neue'; color: #37c7a9; -webkit-text-stroke: #37c7a9}
+    p.p9 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 19.2px 'Helvetica Neue'; color: #e05278; -webkit-text-stroke: #e05278}
+    p.p10 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.6px 'Helvetica Neue'; color: #e1982b; -webkit-text-stroke: #e1982b}
+    p.p11 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 14.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p12 {margin: 0.0px 0.0px 0.0px 0.0px; text-align: center; font: 12.0px 'Helvetica Neue'; color: #e1982b; -webkit-text-stroke: #e1982b; background-color: #e1982b; background-color: rgba(225, 152, 43, 0.15)}
+    p.p13 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #e2e2ec; -webkit-text-stroke: #e2e2ec; min-height: 15.0px}
+    p.p14 {margin: 0.0px 0.0px 0.0px 0.0px; font: 10.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983}
+    p.p15 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px 'Helvetica Neue'; color: #676983; -webkit-text-stroke: #676983; min-height: 15.0px}
+    p.p16 {margin: 0.0px 0.0px 0.0px 0.0px; font: 13.0px 'Helvetica Neue'; -webkit-text-stroke: #000000; background-color: #e1982b; min-height: 16.0px}
+    span.s1 {font-kerning: none; background-color: #13151b}
+    span.s2 {font-kerning: none}
+    span.s3 {font: 13.8px '.Apple Color Emoji UI'; font-kerning: none; background-color: #13151b}
+    span.s4 {font: 12.0px '.Apple Color Emoji UI'; font-kerning: none; background-color: #13151b}
+    span.s5 {font: 12.0px '.Apple Color Emoji UI'; font-kerning: none}
+    span.s6 {font: 12.6px '.Apple Color Emoji UI'; font-kerning: none; background-color: #13151b}
+    table.t1 {border-collapse: collapse}
+    td.td1 {width: 42.4px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td2 {width: 88.6px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td3 {width: 142.7px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td4 {width: 59.3px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td5 {width: 54.6px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td6 {width: 86.2px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td7 {width: 82.8px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td8 {width: 84.5px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+    td.td9 {width: 101.2px; background-color: #181a26; border-style: solid; border-width: 0.0px 0.0px 1.0px 0.0px; border-color: #676983 #676983 #1f2131 #676983; padding: 9.0px 13.0px 9.0px 13.0px}
+  </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="header-left">
-    <a href="index.html" class="back">← Panel Central</a>
-    <div>
-      <div class="header-title">🧾 Pedidos de Comida — CRPTG 11</div>
-      <div class="header-sub">Control de platos comprados · ₡3.000 c/u</div>
-    </div>
-  </div>
-  <button onclick="cargarPedidos()" style="padding:6px 18px;border-radius:100px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">🔄 Actualizar</button>
-</div>
-
-<div class="main">
-
-  <div class="status-bar" id="status-bar">⏳ Cargando pedidos...</div>
-
-  <div class="stats-row">
-    <div class="stat-box"><div class="stat-num" id="s-total" style="color:var(--gold)">–</div><div class="stat-lbl">Pedidos</div></div>
-    <div class="stat-box"><div class="stat-num" id="s-platos" style="color:var(--teal)">–</div><div class="stat-lbl">Platos</div></div>
-    <div class="stat-box"><div class="stat-num" id="s-ret" style="color:var(--teal)">–</div><div class="stat-lbl">Retirados</div></div>
-    <div class="stat-box"><div class="stat-num" id="s-pen" style="color:var(--rose)">–</div><div class="stat-lbl">Pendientes</div></div>
-    <div class="stat-box"><div class="stat-num" id="s-monto" style="color:var(--gold)">–</div><div class="stat-lbl">Monto</div></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title">📊 Resumen por Día</div>
-    <div class="resumen-grid" id="resumen-grid"><div class="empty">Cargando...</div></div>
-  </div>
-
-  <div class="card" style="padding:0;overflow:hidden">
-    <div style="padding:14px 20px;border-bottom:1px solid var(--border)">
-      <div class="filters">
-        <button class="fbtn on"     onclick="setFiltro('todos',this)">Todos</button>
-        <button class="fbtn c-rose" onclick="setFiltro('pendiente',this)">Pendientes</button>
-        <button class="fbtn c-teal" onclick="setFiltro('retirado',this)">Retirados</button>
-        <button class="fbtn"        onclick="setFiltro('mie',this)">Mié</button>
-        <button class="fbtn"        onclick="setFiltro('jue',this)">Jue</button>
-        <button class="fbtn"        onclick="setFiltro('vie',this)">Vie</button>
-        <button class="fbtn"        onclick="setFiltro('sab',this)">Sáb</button>
-        <div class="search-wrap"><input type="text" id="search" placeholder="Buscar..." oninput="renderTabla()"></div>
-      </div>
-    </div>
-    <div class="table-wrap" style="border:none;border-radius:0">
-      <table>
-        <thead><tr><th>#</th><th>Nombre</th><th>Congregación</th><th>Tel.</th><th>Día</th><th>Comida</th><th>Platos</th><th>Estado</th><th>Acciones</th></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
-    <div style="padding:8px 16px;color:var(--muted);font-size:12px" id="tabla-info"></div>
-  </div>
-</div>
-
-<!-- Modal QR -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-card">
-    <div class="modal-nombre" id="modal-nombre"></div>
-    <div class="modal-detalle" id="modal-detalle"></div>
-    <div id="modal-qr-div"></div>
-    <div class="modal-btns">
-      <button class="btn-gold" onclick="window.print()">🖨️ Imprimir</button>
-      <button class="btn-outline" onclick="document.getElementById('modal-overlay').classList.remove('show')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Acceso overlay -->
-<div id="acceso-overlay" style="display:none;position:fixed;inset:0;background:rgba(11,13,19,.97);z-index:9999;align-items:center;justify-content:center;flex-direction:column">
-  <div style="background:#13161f;border:1px solid #22263a;border-radius:24px;padding:40px 42px;text-align:center;max-width:360px;width:90%">
-    <div style="font-size:2.4rem;margin-bottom:12px">🔐</div>
-    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#e8e8f0;margin-bottom:6px">Pedidos de Comida</div>
-    <div style="color:#7a7d95;font-size:13px;margin-bottom:24px">Acceso restringido al control de pedidos.</div>
-    <input type="password" id="acceso-input" placeholder="••••••••"
-      onkeydown="if(event.key==='Enter')verificarAcceso()"
-      style="width:100%;background:#0b0d13;border:1px solid #22263a;color:#e8e8f0;font-family:'DM Sans',sans-serif;font-size:15px;padding:11px 16px;border-radius:12px;outline:none;text-align:center;letter-spacing:3px;margin-bottom:10px;transition:border-color .2s;box-sizing:border-box">
-    <button onclick="verificarAcceso()" style="width:100%;padding:12px;border-radius:12px;border:none;background:#e8a838;color:#000;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Ingresar</button>
-    <div id="acceso-error" style="color:#e86b8b;font-size:12px;margin-top:10px;min-height:16px"></div>
-  </div>
-</div>
-
-<div class="alert" id="alert"></div>
-
-<!-- Firebase CDN (sin módulos) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-// ── FIREBASE ──────────────────────────────────────────────────
-firebase.initializeApp({
-  apiKey:"AIzaSyAcW5Gr3CrBofcwp4ir_J9RRldEx4aNjNs",
-  authDomain:"crptg-11.firebaseapp.com",
-  databaseURL:"https://crptg-11-default-rtdb.firebaseio.com",
-  projectId:"crptg-11",
-  storageBucket:"crptg-11.firebasestorage.app",
-  messagingSenderId:"101435991351",
-  appId:"1:101435991351:web:f645559a5a68a235f2e6b2"
-});
-var db = firebase.database();
-
-// ── CONSTANTES ────────────────────────────────────────────────
-var SHEETS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfs7imRBVok1RUOAzu1SlAGwmt4dPoB9Wi1zEGgXeewdwSSc4ko4sGsNI0YYxAjjoynKmIP1K2kN8S/pub?gid=1178248067&single=true&output=csv";
-
-var DIA_MAP = {"miércoles 1 abr":"mie","miercoles 1 abr":"mie","jueves 2 abr":"jue","viernes 3 abr":"vie","sábado 4 abr":"sab","sabado 4 abr":"sab"};
-var COMIDA_MAP = {"desayuno":"des","almuerzo":"alm","cena":"cen"};
-var DIA_LABEL = {mie:"Mié 1 Abr",jue:"Jue 2 Abr",vie:"Vie 3 Abr",sab:"Sáb 4 Abr"};
-var COMIDA_LABEL = {des:"Desayuno",alm:"Almuerzo",cen:"Cena"};
-var COMIDA_CLASS = {des:"b-des",alm:"b-alm",cen:"b-cen"};
-
-var pedidos   = [];
-var retirados = {};
-var filtro    = "todos";
-
-// Escuchar Firebase en tiempo real
-db.ref("pedidos_compra").on("value", function(snap){
-  retirados = snap.val() || {};
-  renderTabla();
-  actualizarStats();
-  renderResumen();
-});
-
-// ── CSV ────────────────────────────────────────────────────────
-function parseCSV(text){
-  var rows=[]; var cur="",inQ=false,row=[];
-  for(var i=0;i<text.length;i++){var ch=text[i];
-    if(ch==='"'){if(inQ&&text[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
-    else if(ch===','&&!inQ){row.push(cur);cur="";}
-    else if((ch==='\n'||ch==='\r')&&!inQ){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cur);cur="";if(row.some(function(c){return c!==""}))rows.push(row);row=[];}
-    else cur+=ch;
-  }
-  if(cur||row.length){row.push(cur);rows.push(row);}return rows;
-}
-
-function cargarPedidos(){
-  document.getElementById("status-bar").textContent = "⏳ Cargando pedidos...";
-  console.log("Cargando desde:", SHEETS_URL);
-  var proxies = [
-    "https://corsproxy.io/?url="+encodeURIComponent(SHEETS_URL),
-    "https://api.allorigins.win/raw?url="+encodeURIComponent(SHEETS_URL),
-    "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(SHEETS_URL),
-    "https://thingproxy.freeboard.io/fetch/"+SHEETS_URL,
-    "https://jsonp.afeld.me/?url="+encodeURIComponent(SHEETS_URL),
-  ];
-  tryProxy(proxies, 0);
-}
-
-function tryProxy(proxies, idx){
-  if(idx >= proxies.length){
-    document.getElementById("status-bar").textContent = "❌ No se pudo cargar. Intenta de nuevo con el botón Actualizar.";
-    return;
-  }
-  document.getElementById("status-bar").textContent = "⏳ Intentando proxy "+(idx+1)+" de "+proxies.length+"...";
-  fetch(proxies[idx], {cache:"no-store", mode:"cors"})
-    .then(function(r){
-      if(!r.ok) throw new Error("HTTP "+r.status);
-      return r.text();
-    })
-    .then(function(text){
-      if(!text || text.length < 20) throw new Error("vacío");
-      // Aceptar si tiene contenido aunque no tenga coma (podría ser una sola columna)
-      procesarCSV(text);
-    })
-    .catch(function(e){
-      console.warn("Proxy "+(idx+1)+" falló:", e);
-      tryProxy(proxies, idx+1);
-    });
-}
-
-function procesarCSV(text){
-  var rows = parseCSV(text);
-  if(rows.length < 2){
-    document.getElementById("status-bar").textContent = "📋 Hoja cargada correctamente — Sin pedidos aún (0 respuestas)";
-    pedidos = [];
-    actualizarStats(); renderResumen(); renderTabla();
-    return;
-  }
-
-  var h = rows[0].map(function(x){ return x.replace(/^"|"$/g,"").trim().toLowerCase(); });
-
-  function col(){
-    var names = Array.from(arguments);
-    for(var i=0;i<names.length;i++){
-      var idx = h.findIndex(function(x){ return x.includes(names[i]); });
-      if(idx !== -1) return idx;
-    }
-    return -1;
-  }
-
-  var iTs   = col("marca temporal","timestamp","fecha");
-  var iNom  = col("nombre");
-  var iCong = col("congregaci");
-  var iTel  = col("teléfono","telefono","whatsapp");
-  var iDia  = col("día","dia");
-  var iCom  = col("tiempo de comida","tiempo");
-  var iCant = col("cantidad de platos","cantidad","platos");
-
-  pedidos = [];
-  for(var i=1; i<rows.length; i++){
-    var r = rows[i];
-    var nombre = (r[iNom]||"").replace(/^"|"$/g,"").trim();
-    if(!nombre) continue;
-
-    var diaRaw = (r[iDia]||"").replace(/^"|"$/g,"").trim().toLowerCase();
-    var comRaw = (r[iCom]||"").replace(/^"|"$/g,"").trim().toLowerCase();
-    var cant   = parseInt((r[iCant]||"1").replace(/\D/g,"")) || 1;
-
-    // Normalizar día
-    var dia = DIA_MAP[diaRaw] || diaRaw.substring(0,3) || "?";
-    // Normalizar comida
-    var com = COMIDA_MAP[comRaw];
-    if(!com){
-      if(comRaw.includes("des")) com="des";
-      else if(comRaw.includes("alm")) com="alm";
-      else if(comRaw.includes("cen")) com="cen";
-      else com = comRaw.substring(0,3) || "?";
-    }
-
-    var id = "fila_"+i; // fila única del Sheet — i va de 1 a N (filas de datos)
-
-    pedidos.push({
-      id: id,
-      fila: i+1,
-      nombre: nombre,
-      cong: (r[iCong]!==-1 ? r[iCong]||"—" : "—").replace(/^"|"$/g,"").trim(),
-      tel:  (r[iTel] !==-1 ? r[iTel] ||"—" : "—").replace(/^"|"$/g,"").trim(),
-      dia: dia, com: com, cant: cant,
-      ts: (r[iTs]||"").replace(/^"|"$/g,"").trim()
-    });
-  }
-
-  document.getElementById("status-bar").textContent = "✅ "+pedidos.length+" pedidos cargados · Última actualización: "+new Date().toLocaleTimeString("es-CR",{hour:"2-digit",minute:"2-digit"});
-  actualizarStats();
-  renderResumen();
-  renderTabla();
-  mostrarAlerta("✅ "+pedidos.length+" pedidos cargados");
-}
-
-// ── FIREBASE OPS ──────────────────────────────────────────────
-function marcarRetiro(id){
-  var hora = new Date().toLocaleTimeString("es-CR",{hour:"2-digit",minute:"2-digit"});
-  db.ref("pedidos_compra/"+id).set({hora:hora, retirado:true});
-  mostrarAlerta("✅ Entregado — "+hora);
-}
-
-function deshacerRetiro(id){
-  db.ref("pedidos_compra/"+id).remove();
-  mostrarAlerta("↩ Retiro deshecho");
-}
-
-// ── STATS ──────────────────────────────────────────────────────
-function actualizarStats(){
-  var total  = pedidos.length;
-  var platos = pedidos.reduce(function(s,p){return s+p.cant;},0);
-  var ret    = pedidos.filter(function(p){return retirados[p.id];}).length;
-  document.getElementById("s-total").textContent  = total;
-  document.getElementById("s-platos").textContent = platos;
-  document.getElementById("s-ret").textContent    = ret;
-  document.getElementById("s-pen").textContent    = total-ret;
-  document.getElementById("s-monto").textContent  = "₡"+(platos*3000).toLocaleString("es-CR");
-}
-
-// ── RESUMEN ────────────────────────────────────────────────────
-function renderResumen(){
-  var dias = ["mie","jue","vie","sab"];
-  var comidas = ["des","alm","cen"];
-  if(!pedidos.length){ document.getElementById("resumen-grid").innerHTML='<div class="empty">Sin pedidos aún</div>'; return; }
-  var html = "";
-  dias.forEach(function(d){
-    var dPed = pedidos.filter(function(p){return p.dia===d;});
-    if(!dPed.length) return;
-    var rows = "";
-    comidas.forEach(function(c){
-      var cPed = dPed.filter(function(p){return p.com===c;});
-      if(!cPed.length) return;
-      var total = cPed.reduce(function(s,p){return s+p.cant;},0);
-      var ret   = cPed.filter(function(p){return retirados[p.id];}).length;
-      rows += '<div class="res-row"><span>'+(COMIDA_LABEL[c]||c)+'</span><span style="color:var(--teal);font-weight:600">'+total+' platos</span></div>';
-    });
-    var totalDia = dPed.reduce(function(s,p){return s+p.cant;},0);
-    html += '<div class="res-card"><div class="res-dia">'+(DIA_LABEL[d]||d)+'</div>'+rows+
-      '<div class="res-row" style="margin-top:6px;padding-top:8px;border-top:1px solid var(--border)">'+
-      '<span style="font-weight:600">Total</span><span style="color:var(--gold);font-weight:700">'+totalDia+' · ₡'+(totalDia*3000).toLocaleString("es-CR")+'</span></div></div>';
-  });
-  document.getElementById("resumen-grid").innerHTML = html || '<div class="empty">Sin datos</div>';
-}
-
-// ── FILTROS ────────────────────────────────────────────────────
-function setFiltro(f,el){
-  filtro=f;
-  document.querySelectorAll(".fbtn").forEach(function(b){b.classList.remove("on");});
-  if(el) el.classList.add("on");
-  renderTabla();
-}
-
-// ── TABLA ──────────────────────────────────────────────────────
-function renderTabla(){
-  var q = (document.getElementById("search")||{value:""}).value.toLowerCase();
-  var lista = pedidos.filter(function(p){
-    if(filtro==="pendiente" && retirados[p.id]) return false;
-    if(filtro==="retirado"  && !retirados[p.id]) return false;
-    if(["mie","jue","vie","sab"].indexOf(filtro)>-1 && p.dia!==filtro) return false;
-    if(q && p.nombre.toLowerCase().indexOf(q)===-1 && p.cong.toLowerCase().indexOf(q)===-1) return false;
-    return true;
-  });
-
-  document.getElementById("tabla-info").textContent = lista.length+" de "+pedidos.length+" pedidos";
-  if(!lista.length){ document.getElementById("tbody").innerHTML='<tr><td colspan="9" class="empty">Sin resultados</td></tr>'; return; }
-
-  document.getElementById("tbody").innerHTML = lista.map(function(p){
-    var ret = retirados[p.id];
-    return '<tr>'+
-      '<td style="color:var(--muted)">'+p.fila+'</td>'+
-      '<td style="font-weight:600">'+p.nombre+'</td>'+
-      '<td style="color:var(--muted);font-size:12px">'+p.cong+'</td>'+
-      '<td style="color:var(--muted);font-size:12px">'+p.tel+'</td>'+
-      '<td><span class="badge" style="background:rgba(232,168,56,.1);color:var(--gold)">'+(DIA_LABEL[p.dia]||p.dia)+'</span></td>'+
-      '<td><span class="badge '+(COMIDA_CLASS[p.com]||"")+'">'+(COMIDA_LABEL[p.com]||p.com)+'</span></td>'+
-      '<td style="font-weight:700;color:var(--teal);font-size:1rem">'+p.cant+'</td>'+
-      '<td>'+(ret
-        ? '<span class="badge b-ret">✅ '+ret.hora+'</span>'
-        : '<span class="badge b-pen">Pendiente</span>'
-      )+'</td>'+
-      '<td style="display:flex;gap:4px;flex-wrap:wrap">'+
-        '<button class="btn-sm" onclick="verQR(\''+p.id+'\')">📲 QR</button>'+
-        (ret
-          ? '<button class="btn-sm rose" onclick="deshacerRetiro(\''+p.id+'\')">↩</button>'
-          : '<button class="btn-sm teal" onclick="marcarRetiro(\''+p.id+'\')">✅</button>'
-        )+
-      '</td>'+
-    '</tr>';
-  }).join("");
-}
-
-// ── QR MODAL ──────────────────────────────────────────────────
-function verQR(id){
-  var p = pedidos.find(function(x){return x.id===id;});
-  if(!p) return;
-  document.getElementById("modal-nombre").textContent = p.nombre;
-  document.getElementById("modal-detalle").innerHTML =
-    p.cong+" · "+(DIA_LABEL[p.dia]||p.dia)+" · "+(COMIDA_LABEL[p.com]||p.com)+"<br>"+
-    '<strong style="font-size:1.1rem;color:var(--gold)">'+p.cant+' plato'+(p.cant>1?"s":"")+'</strong>'+
-    " · ₡"+(p.cant*3000).toLocaleString("es-CR");
-
-  var qrDiv = document.getElementById("modal-qr-div");
-  qrDiv.innerHTML = "";
-  new QRCode(qrDiv, {
-    text: "PEDIDO:"+p.id+":"+p.cant+":"+p.dia+":"+p.com,
-    width:200, height:200,
-    colorDark:"#000000", colorLight:"#ffffff",
-    correctLevel: QRCode.CorrectLevel.M
-  });
-  document.getElementById("modal-overlay").classList.add("show");
-}
-
-// ── ALERTA ────────────────────────────────────────────────────
-function mostrarAlerta(msg,err){
-  var a=document.getElementById("alert");
-  a.textContent=msg; a.className="alert show"+(err?" error":"");
-  setTimeout(function(){a.className="alert";},3000);
-}
-
-// ── ACCESO ────────────────────────────────────────────────────
-(function(){
-  var ok = localStorage.getItem("crptg11-pedidos-ok")==="ok"||localStorage.getItem("crptg11-auth")==="ok";
-  if(!ok) document.getElementById("acceso-overlay").style.display="flex";
-  document.documentElement.style.visibility="visible";
-})();
-
-function verificarAcceso(){
-  var v = document.getElementById("acceso-input").value.trim();
-  var e = document.getElementById("acceso-error");
-  if(v==="COMPRAcomidaRESTAURADA"||v==="IglesiaRestaurada2026"){
-    localStorage.setItem("crptg11-pedidos-ok","ok");
-    document.getElementById("acceso-overlay").style.display="none";
-    cargarPedidos();
-  } else {
-    e.textContent="Clave incorrecta";
-    document.getElementById("acceso-input").value="";
-  }
-}
-
-// ── INIT ──────────────────────────────────────────────────────
-cargarPedidos();
-</script>
+<p class="p1"><span class="s1"><a href="file:///Users/nadiavdgn/Downloads/index.html">← Panel Central<span class="s2"></span></a></span></p>
+<p class="p2"><span class="s3">🧾</span><span class="s1"> Pedidos de Comida — CRPTG 11</span></p>
+<p class="p3"><span class="s1">Control de platos comprados · ₡3.000 c/u</span></p>
+<p class="p4"><span class="s4">🔄</span><span class="s1"> Actualizar</span></p>
+<p class="p5"><span class="s5">⏳</span><span class="s2"> Cargando pedidos...</span></p>
+<p class="p6"><span class="s1">–</span></p>
+<p class="p7"><span class="s1">PEDIDOS</span></p>
+<p class="p8"><span class="s1">–</span></p>
+<p class="p7"><span class="s1">PLATOS</span></p>
+<p class="p8"><span class="s1">–</span></p>
+<p class="p7"><span class="s1">RETIRADOS</span></p>
+<p class="p9"><span class="s1">–</span></p>
+<p class="p7"><span class="s1">PENDIENTES</span></p>
+<p class="p6"><span class="s1">–</span></p>
+<p class="p7"><span class="s1">MONTO</span></p>
+<p class="p10"><span class="s6">📊</span><span class="s1"> Resumen por Día</span></p>
+<p class="p11"><span class="s1">Cargando...</span></p>
+<p class="p12"><span class="s2">Todos</span></p>
+<p class="p4"><span class="s1">Pendientes</span></p>
+<p class="p4"><span class="s1">Retirados</span></p>
+<p class="p4"><span class="s1">Mié</span></p>
+<p class="p4"><span class="s1">Jue</span></p>
+<p class="p4"><span class="s1">Vie</span></p>
+<p class="p4"><span class="s1">Sáb</span></p>
+<p class="p13"><span class="s2"></span><br></p>
+<table cellspacing="0" cellpadding="0" class="t1">
+  <tbody>
+    <tr>
+      <td valign="middle" class="td1">
+        <p class="p14"><span class="s1">#</span></p>
+      </td>
+      <td valign="middle" class="td2">
+        <p class="p14"><span class="s1">NOMBRE</span></p>
+      </td>
+      <td valign="middle" class="td3">
+        <p class="p14"><span class="s1">CONGREGACIÓN</span></p>
+      </td>
+      <td valign="middle" class="td4">
+        <p class="p14"><span class="s1">TEL.</span></p>
+      </td>
+      <td valign="middle" class="td5">
+        <p class="p14"><span class="s1">DÍA</span></p>
+      </td>
+      <td valign="middle" class="td6">
+        <p class="p14"><span class="s1">COMIDA</span></p>
+      </td>
+      <td valign="middle" class="td7">
+        <p class="p14"><span class="s1">PLATOS</span></p>
+      </td>
+      <td valign="middle" class="td8">
+        <p class="p14"><span class="s1">ESTADO</span></p>
+      </td>
+      <td valign="middle" class="td9">
+        <p class="p14"><span class="s1">ACCIONES</span></p>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p class="p13"><span class="s2"></span><br></p>
+<p class="p15"><span class="s2"></span><br></p>
+<p class="p16"><span class="s2"></span><br></p>
 </body>
 </html>
